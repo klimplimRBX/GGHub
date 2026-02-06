@@ -8,7 +8,7 @@
 -- =====================================
 
 _G.ScriptLoadstring = [[
-    loadstring(game:HttpGet("https://pastebin.com/raw/GAn8MYHd"))()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/klimplimRBX/GGHub/main/GGHubMainCode.lua"))()
 ]]
 
 

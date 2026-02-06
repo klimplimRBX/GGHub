@@ -8,7 +8,7 @@
 -- =====================================
 
 _G.ScriptLoadstring = [[
-    loadstring(game:HttpGet("https://raw.githubusercontent.com/klimplimRBX/GGHub/main/GGHubMainCode.lua"))()
+    loadstring(game:HttpGet("https://pastebin.com/raw/GAn8MYHd"))()
 ]]
 
 
@@ -60,6 +60,8 @@ end
 
 local savedData = loadData()
 
+_G.StopRequested = false
+
 local function createStopButton()
     local stopGui = Instance.new("ScreenGui")
     stopGui.Name = "GGHub_StopButton"
@@ -102,6 +104,8 @@ end)
     stroke.Thickness = 2
     
     stopBtn.MouseButton1Click:Connect(function()
+        _G.StopRequested = true
+        
         local data = loadData()
         data.repeatMode = false
         data.autoExecute = false
@@ -1284,7 +1288,7 @@ do
 		TweenService:Create(expandBtn, TweenInfo.new(0.2), {Rotation = isExpanded and 180 or 0}):Play()
 	end)
 
-	executeBtn.MouseButton1Click:Connect(function()
+	local function executeFarming()
 		local player = game.Players.LocalPlayer
 		local noclip = false
 		local godMode = false
@@ -1379,6 +1383,8 @@ do
 			showNotification("Finished Successfully")
 
 			if autoRejoinEnabled or _G.AutoExecuteFarming then
+				if _G.StopRequested then return end
+				
 				task.wait(2)
 				
 				local data = loadData()
@@ -1390,13 +1396,17 @@ do
 				rejoinGame()
 			end
 		end)
+	end
+
+	executeBtn.MouseButton1Click:Connect(function()
+		executeFarming()
 	end)
 	
 	task.spawn(function()
-		task.wait(0.5)
+		task.wait(3)
 		if _G.AutoExecuteFarming then
-			task.wait(0.5)
-			executeBtn.MouseButton1Click:Fire()
+			_G.AutoExecuteFarming = false
+			executeFarming()
 		end
 	end)
 end
@@ -1488,7 +1498,6 @@ createButton(mapPage, "Go Back to Base", "Returns you to the base safely", funct
 		showNotification("Complete (If you din't die in the process)")
 	end)
 end)
-
 
 -- ===================================================
 --       ⚙️ SETTINGS PAGE CONTENT
@@ -1685,4 +1694,4 @@ if loadingGui then
 	loadingGui:Destroy()
 end
 
-print("GGHub v0.8 — Fully Loaded")
+print("GGHub Loaded")

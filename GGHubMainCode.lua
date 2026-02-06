@@ -8,7 +8,7 @@
 -- =====================================
 
 _G.ScriptLoadstring = [[
-    loadstring(game:HttpGet("https://pastebin.com/raw/GAn8MYHd"))()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/klimplimRBX/GGHub/main/GGHubMainCode.lua"))()
 ]]
 
 
@@ -856,7 +856,6 @@ ANYTHING LESS POWERFUL CAN CAUSE STABILITY ISSUES OR MAKE THE EXPERIENCE LAGGY!]
 	end
 end
 
-
 local TeleportService = game:GetService("TeleportService")
 local function rejoinGame()
     local queue_on_teleport = queue_on_teleport or (syn and syn.queue_on_teleport) or (fluxus and fluxus.queue_on_teleport)
@@ -1155,6 +1154,7 @@ createToggle(scriptPage, "Auto Spin", "SPAM SPINNNNSS", function(state)
     end
 end)
 
+
 local spinNote = Instance.new("TextLabel")
 spinNote.Name = "AutoSpinNote"
 spinNote.Text = [[Some functions are on beta testing so they might not work]]
@@ -1382,14 +1382,14 @@ do
 
 			showNotification("Finished Successfully")
 
-			if autoRejoinEnabled or _G.AutoExecuteFarming then
+			local currentData = loadData()
+			if autoRejoinEnabled or currentData.repeatMode then
 				if _G.StopRequested then return end
 				
 				task.wait(2)
 				
-				local data = loadData()
-				data.repeatMode = true
-				saveData(data)
+				currentData.repeatMode = true
+				saveData(currentData)
 				
 				showNotification("Rejoining...")
 				task.wait(1)
@@ -1694,4 +1694,4 @@ if loadingGui then
 	loadingGui:Destroy()
 end
 
-print("GGHub Loaded")
+print("GGHub Fully Loaded")

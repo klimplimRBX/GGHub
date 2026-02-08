@@ -488,7 +488,7 @@ local Header = Instance.new("Frame")
 Header.Size = UDim2.new(1, 0, 0, 50); Header.BackgroundTransparency = 1; Header.Parent = MainFrame
 
 local AppTitle = Instance.new("TextLabel")
-AppTitle.Text = "GGHub v0.8"
+AppTitle.Text = "GGHub v0.8 (outdated)"
 AppTitle.Size = UDim2.new(0, 200, 0, 20)
 AppTitle.Position = UDim2.new(0, 15, 0, 12)
 AppTitle.Font = Enum.Font.GothamBold; AppTitle.TextSize = 18; AppTitle.TextColor3 = Colors.TextMain

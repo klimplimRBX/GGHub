@@ -1663,6 +1663,33 @@ createButton(settingsPage, "Reset All Settings", "Clears all data, stops all fea
     showNotification("Rejoin to complete reset")
 end)
 
+createButton(settingsPage, "Arcade Event script", "Goes back to an newer version, making sure it works for both events", function()
+	showNotification("Loading Money Event Script...")
+	
+	farming = false
+	autoSpinEnabled = false
+	spinning = false
+	removingBases = false
+	NoclipEnabled = false
+	
+	Workspace.Gravity = 196.2
+	disableGodMode()
+	
+	local player = LocalPlayer
+	local character = player.Character
+	if character then
+		for _, part in pairs(character:GetDescendants()) do
+			if part:IsA("BasePart") and part.Name ~= "HumanoidRootPart" then
+				part.CanCollide = true
+			end
+		end
+	end
+	
+	if gui then gui:Destroy() end
+	task.wait(0.5)
+	loadstring(game:HttpGet("https://raw.githubusercontent.com/klimplimRBX/GGHub/main/GGHubMainCode.lua"))()
+end)
+
 -- ===================================================
 --         INITIALIZE & CLOSE/MIN LOGIC
 -- ===================================================

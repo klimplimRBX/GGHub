@@ -1664,7 +1664,7 @@ createButton(settingsPage, "Reset All Settings", "Clears all data, stops all fea
 end)
 
 createButton(settingsPage, "Arcade Event script", "Goes back to an newer version, making sure it works for both events", function()
-	showNotification("Loading Money Event Script...")
+	showNotification("Loading...")
 	
 	farming = false
 	autoSpinEnabled = false

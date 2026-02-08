@@ -934,7 +934,7 @@ createToggle(scriptPage, "Auto Farm Tickets", "Auto collects tickets, recommende
     end
 end)
 
-createToggle(scriptPage, "Auto Farm Console Coins", "Collects console coins automatically, again, holding an wave shield is recommended", function(state)
+createToggle(scriptPage, "Auto Farm Console Coins", "Collects console coins automatically, holding an wave shield is recommended", function(state)
     AutoCollectConsoleCoinsEnabled = state
     if state then 
         enableGodMode() 

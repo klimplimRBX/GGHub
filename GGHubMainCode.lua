@@ -1307,6 +1307,8 @@ createButton(settingsPage, "Money Event Script", "Goes back to an older version,
 	spinning = false
 	removingBases = false
 	NoclipEnabled = false
+    AutoCollectTicketsEnabled = false
+    AutoCollectConsoleCoinsEnabled = false
 	
 	Workspace.Gravity = 196.2
 	disableGodMode()

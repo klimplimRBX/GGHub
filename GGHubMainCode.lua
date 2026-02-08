@@ -240,12 +240,12 @@ local Colors = {
 	ButtonHover = Color3.fromRGB(70, 70, 70)
 }
 
-if PlayerGui:FindFirstChild("GGHub_v08") then
+if PlayerGui:FindFirstChild("GGHub_v09") then
 	PlayerGui.GGHub_v08:Destroy()
 end
 
 local gui = Instance.new("ScreenGui")
-gui.Name = "GGHub_v08"
+gui.Name = "GGHub_v09"
 gui.Parent = PlayerGui
 gui.ResetOnSpawn = false
 gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
@@ -362,7 +362,7 @@ local Header = Instance.new("Frame")
 Header.Size = UDim2.new(1, 0, 0, 50); Header.BackgroundTransparency = 1; Header.Parent = MainFrame
 
 local AppTitle = Instance.new("TextLabel")
-AppTitle.Text = "GGHub v0.8"
+AppTitle.Text = "GGHub v0.9"
 AppTitle.Size = UDim2.new(0, 200, 0, 20)
 AppTitle.Position = UDim2.new(0, 15, 0, 12)
 AppTitle.Font = Enum.Font.GothamBold; AppTitle.TextSize = 18; AppTitle.TextColor3 = Colors.TextMain
@@ -923,7 +923,7 @@ end)
 local AutoCollectTicketsEnabled = false
 local AutoCollectConsoleCoinsEnabled = false
 
-createToggle(scriptPage, "Auto Farm Tickets", "Prioritizes ArcadeEventTickets", function(state)
+createToggle(scriptPage, "Auto Farm Tickets", "Auto collects tickets, recommended to hold an wave shield", function(state)
     AutoCollectTicketsEnabled = state
     if state then 
         enableGodMode() 
@@ -934,7 +934,7 @@ createToggle(scriptPage, "Auto Farm Tickets", "Prioritizes ArcadeEventTickets", 
     end
 end)
 
-createToggle(scriptPage, "Auto Farm Console Coins", "Collects ArcadeEventConsoles", function(state)
+createToggle(scriptPage, "Auto Farm Console Coins", "Collects console coins automatically, again, holding an wave shield is recommended", function(state)
     AutoCollectConsoleCoinsEnabled = state
     if state then 
         enableGodMode() 

@@ -167,6 +167,7 @@ local TARGET_PLACE_ID = 131623223084840
 if game.PlaceId ~= TARGET_PLACE_ID then
 	local checkGui = Instance.new("ScreenGui")
 	checkGui.Name = "GGHub_Security"
+	checkGui.ResetOnSpawn = false
 	checkGui.Parent = Players.LocalPlayer:WaitForChild("PlayerGui")
 
 	if loadingGui then
@@ -181,10 +182,14 @@ if game.PlaceId ~= TARGET_PLACE_ID then
 	alertFrame.BorderSizePixel = 0
 	alertFrame.Parent = checkGui
 
-	Instance.new("UICorner", alertFrame)
-	local stroke = Instance.new("UIStroke", alertFrame)
+	local corner = Instance.new("UICorner")
+	corner.CornerRadius = UDim.new(0, 10)
+	corner.Parent = alertFrame
+	
+	local stroke = Instance.new("UIStroke")
 	stroke.Color = Color3.fromRGB(255, 50, 50)
 	stroke.Thickness = 2
+	stroke.Parent = alertFrame
 
 	local msg = Instance.new("TextLabel")
 	msg.Size = UDim2.new(1, 0, 1, 0)
@@ -199,9 +204,15 @@ if game.PlaceId ~= TARGET_PLACE_ID then
 		local tw1 = TweenService:Create(alertFrame, TweenInfo.new(0.5), {BackgroundTransparency = 1})
 		local tw2 = TweenService:Create(msg, TweenInfo.new(0.5), {TextTransparency = 1})
 		local tw3 = TweenService:Create(stroke, TweenInfo.new(0.5), {Transparency = 1})
-		tw1:Play(); tw2:Play(); tw3:Play()
-		tw1.Completed:Connect(function() checkGui:Destroy() end)
+		tw1:Play()
+		tw2:Play()
+		tw3:Play()
+		tw1.Completed:Connect(function()
+			checkGui:Destroy()
+		end)
 	end)
+	
+	return
 end
 
 -- ===================================================

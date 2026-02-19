@@ -5,8 +5,7 @@
        from here and using then on your own script
 ]]--
 
-
--- ============= GGHub v0.9 ===============
+-- ========== GGHub v0.9 =================
 
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
@@ -167,7 +166,6 @@ local TARGET_PLACE_ID = 131623223084840
 if game.PlaceId ~= TARGET_PLACE_ID then
 	local checkGui = Instance.new("ScreenGui")
 	checkGui.Name = "GGHub_Security"
-	checkGui.ResetOnSpawn = false
 	checkGui.Parent = Players.LocalPlayer:WaitForChild("PlayerGui")
 
 	if loadingGui then
@@ -182,14 +180,10 @@ if game.PlaceId ~= TARGET_PLACE_ID then
 	alertFrame.BorderSizePixel = 0
 	alertFrame.Parent = checkGui
 
-	local corner = Instance.new("UICorner")
-	corner.CornerRadius = UDim.new(0, 10)
-	corner.Parent = alertFrame
-	
-	local stroke = Instance.new("UIStroke")
+	Instance.new("UICorner", alertFrame)
+	local stroke = Instance.new("UIStroke", alertFrame)
 	stroke.Color = Color3.fromRGB(255, 50, 50)
 	stroke.Thickness = 2
-	stroke.Parent = alertFrame
 
 	local msg = Instance.new("TextLabel")
 	msg.Size = UDim2.new(1, 0, 1, 0)
@@ -204,36 +198,18 @@ if game.PlaceId ~= TARGET_PLACE_ID then
 		local tw1 = TweenService:Create(alertFrame, TweenInfo.new(0.5), {BackgroundTransparency = 1})
 		local tw2 = TweenService:Create(msg, TweenInfo.new(0.5), {TextTransparency = 1})
 		local tw3 = TweenService:Create(stroke, TweenInfo.new(0.5), {Transparency = 1})
-		tw1:Play()
-		tw2:Play()
-		tw3:Play()
-		tw1.Completed:Connect(function()
-			checkGui:Destroy()
-		end)
+		tw1:Play(); tw2:Play(); tw3:Play()
+		tw1.Completed:Connect(function() checkGui:Destroy() end)
 	end)
-	
-	return
+   return
 end
 
 -- ===================================================
---        GAME VARIABLES & MODULE LOADING
+--        literal garbage now
 -- ===================================================
 
-local COIN_NAME = "GoldBar" -- Devs forgot to change from GoldBars to ArcadeCoins💔🥀
 local notificationList = {}
-
-local performSingleDash = false
-local cooldownActive = false
-local farming = false
-local autoSpinEnabled = false
-local spinning = false
 local removingBases = false
-
-local SpinRF = nil
-
-task.spawn(function()
-    SpinRF = ReplicatedStorage:WaitForChild("Packages", 5):WaitForChild("Net", 5):WaitForChild("RF/WheelSpin.Roll", 5)
-end)
 
 -- ===================================================
 --            COLORS & GUI SETUP
@@ -252,7 +228,7 @@ local Colors = {
 }
 
 if PlayerGui:FindFirstChild("GGHub_v09") then
-	PlayerGui.GGHub_v08:Destroy()
+	PlayerGui.GGHub_v09:Destroy()
 end
 
 local gui = Instance.new("ScreenGui")
@@ -380,7 +356,7 @@ AppTitle.Font = Enum.Font.GothamBold; AppTitle.TextSize = 18; AppTitle.TextColor
 AppTitle.TextXAlignment = Enum.TextXAlignment.Left; AppTitle.BackgroundTransparency = 1; AppTitle.Parent = Header
 
 local AppSignature = Instance.new("TextLabel")
-AppSignature.Text = "Made by KlimplimRBX - The last update before the biggest yet"
+AppSignature.Text = "Made by KlimplimRBX - New features"
 AppSignature.Size = UDim2.new(0, 300, 0, 15)
 AppSignature.Position = UDim2.new(0, 15, 0, 32)
 AppSignature.Font = Enum.Font.Gotham; AppSignature.TextSize = 11; AppSignature.TextColor3 = Colors.TextSub
@@ -740,53 +716,6 @@ ANYTHING LESS POWERFUL CAN CAUSE STABILITY ISSUES OR MAKE THE EXPERIENCE LAGGY!]
 	end
 end
 
-local TeleportService = game:GetService("TeleportService")
-local function rejoinGame()
-    local queue_on_teleport = queue_on_teleport or (syn and syn.queue_on_teleport) or (fluxus and fluxus.queue_on_teleport)
-    
-    if queue_on_teleport then
-        queue_on_teleport(_G.ScriptLoadstring)
-    end
-
-    local data = loadData()
-    local rejoinMode = data.rejoinMode or "different"
-    local jobId = data.jobId
-    
-    if rejoinMode == "same" and jobId then
-        game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId, jobId, game:GetService("Players").LocalPlayer)
-    else
-        game:GetService("TeleportService"):Teleport(game.PlaceId, game:GetService("Players").LocalPlayer)
-    end
-end
-
--- ===================================================
---     AUTO SPIN LOGIC
--- ===================================================
-
-local function requestSpin()
-	if not SpinRF then return end
-	task.spawn(function()
-		pcall(function()
-			SpinRF:InvokeServer()
-		end)
-	end)
-end
-
-local function spinOnce()
-	requestSpin()
-end
-
-task.spawn(function()
-	while true do
-		if autoSpinEnabled then
-			spinOnce()
-			task.wait(0.4)
-		else
-			task.wait(0.5)
-		end
-	end
-end)
-
 -- ===================================================
 --         🏠 HOME PAGE CONTENT
 -- ===================================================
@@ -928,349 +857,428 @@ createDropdown(homePage, "Select Shader", {"Default", "Daytime", "Sunset", "Nigh
 end)
 
 -- ===================================================
---       ⚡ SCRIPTS PAGE CONTENT
+--       ⚡ SCRIPTS PAGE CONTENT - VALENTINE EVENT
 -- ===================================================
 
-local AutoCollectTicketsEnabled = false
-local AutoCollectConsoleCoinsEnabled = false
+local AutoFarmCandyEnabled = false
+local AutoCollectValentineCoinEnabled = false
+local AutoDepositCandyEnabled = false
+local lastCollectedCandy = nil
+local lastCollectedValentineCoin = nil
 
-createToggle(scriptPage, "Auto Farm Tickets", "Auto collects tickets, recommended to hold an wave shield", function(state)
-    AutoCollectTicketsEnabled = state
-    if state then 
-        enableGodMode() 
-    else 
-        if not AutoCollectConsoleCoinsEnabled then 
-            disableGodMode() 
-        end 
-    end
+local moveLocked = false
+local function acquireMoveLock()
+	while moveLocked do task.wait(0.02) end
+	moveLocked = true
+end
+local function releaseMoveLock()
+	moveLocked = false
+end
+
+LocalPlayer.CharacterAdded:Connect(function()
+	moveLocked = false
+	lastCollectedCandy = nil
+	lastCollectedValentineCoin = nil
 end)
 
-createToggle(scriptPage, "Auto Farm Console Coins", "Collects console coins automatically, holding an wave shield is recommended", function(state)
-    AutoCollectConsoleCoinsEnabled = state
-    if state then 
-        enableGodMode() 
-    else 
-        if not AutoCollectTicketsEnabled then 
-            disableGodMode() 
-        end 
-    end
+local function getPosition(obj)
+	if obj:IsA("BasePart") then
+		return obj.Position
+	elseif obj:IsA("Model") then
+		if obj.PrimaryPart then return obj.PrimaryPart.Position end
+		local part = obj:FindFirstChildWhichIsA("BasePart", true)
+		if part then return part.Position end
+	end
+	return nil
+end
+
+local function isCharacterAlive(root, humanoid)
+	if not root or not root.Parent then return false end
+	if not humanoid or not humanoid.Parent then return false end
+	if humanoid.Health <= 0 then return false end
+	return true
+end
+
+local function getCharacterRoots()
+	local character = LocalPlayer.Character
+	if not character then return nil, nil end
+	local root = character:FindFirstChild("HumanoidRootPart")
+	local humanoid = character:FindFirstChildOfClass("Humanoid")
+	return root, humanoid
+end
+
+local function waitForCharacterSafe()
+	local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+	local root = character:WaitForChild("HumanoidRootPart", 10)
+	local humanoid  = character:WaitForChild("Humanoid", 10)
+	if not root or not humanoid then return nil, nil end
+	local elapsed = 0
+	while humanoid.Health <= 0 do
+		local dt = RunService.Heartbeat:Wait()
+		elapsed  = elapsed + dt
+		if elapsed > 10 then return nil, nil end
+		if LocalPlayer.Character ~= character then return nil, nil end
+	end
+	task.wait(0.2)
+	return root, humanoid
+end
+
+local function flyToPos(targetPos, speed)
+	speed = speed or 4000
+	local root, humanoid = getCharacterRoots()
+	if not isCharacterAlive(root, humanoid) then return false end
+
+	while (root.Position - targetPos).Magnitude > 1.5 do
+		local dt = RunService.Heartbeat:Wait()
+		if not isCharacterAlive(root, humanoid) then return false end
+		local remaining = (targetPos - root.Position)
+		local step = math.min(speed * dt, remaining.Magnitude)
+		root.CFrame = root.CFrame + remaining.Unit * step
+		root.AssemblyLinearVelocity = Vector3.zero
+	end
+
+	if isCharacterAlive(root, humanoid) then
+		root.CFrame = CFrame.new(targetPos)
+		root.AssemblyLinearVelocity = Vector3.zero
+		root.AssemblyAngularVelocity = Vector3.zero
+	end
+	return true
+end
+
+local function collectItem(targetPos, heightOffset)
+	local root = waitForCharacterSafe()  -- returns root, humanoid; we only need root
+	if not root then return end
+
+	acquireMoveLock()
+	local ok, err = pcall(function()
+		local cx, cz = root.Position.X, root.Position.Z
+		flyToPos(Vector3.new(cx, -25, cz), 1000)
+		task.wait(0.01)
+		flyToPos(Vector3.new(targetPos.X, -25, targetPos.Z), 1000)
+		task.wait(0.01)
+		flyToPos(Vector3.new(targetPos.X,  heightOffset, targetPos.Z),  1000)
+		task.wait(0.01)
+	end)
+	releaseMoveLock()
+
+	if not ok then warn("[collectItem] Movement error: " .. tostring(err)) end
+end
+
+task.spawn(function()
+	while true do
+		if AutoFarmCandyEnabled then
+			local root = getCharacterRoots()
+			if root then
+				local candyEventParts = Workspace:FindFirstChild("CandyEventParts")
+				if candyEventParts then
+					local candyPriority = {"Candy3", "Candy2", "Candy1"}
+					local allCandies    = {}
+					for _, t in ipairs(candyPriority) do allCandies[t] = {} end
+
+					for _, candy in ipairs(candyEventParts:GetChildren()) do
+						if candy.Parent then
+							for _, candyType in ipairs(candyPriority) do
+								if candy.Name == candyType then
+									local pos = getPosition(candy)
+									if pos then
+										table.insert(allCandies[candyType], {
+											obj  = candy,
+											pos  = pos,
+											dist = (root.Position - pos).Magnitude
+										})
+									end
+									break
+								end
+							end
+						end
+					end
+
+					-- coughing, um Candy range
+					local candy3List = allCandies["Candy3"]
+					local nearestCandy3Dist = math.huge
+					if #candy3List > 0 then
+						table.sort(candy3List, function(a, b) return a.dist < b.dist end)
+						nearestCandy3Dist = candy3List[1].dist
+					end
+					local candy3TooFar = (nearestCandy3Dist > 500)
+
+					local target = nil
+					for _, candyType in ipairs(candyPriority) do
+						local list = allCandies[candyType]
+						if #list > 0 then
+							table.sort(list, function(a, b) return a.dist < b.dist end)
+							if candyType == "Candy3" and candy3TooFar then
+								continue
+							end
+							if lastCollectedCandy and list[1] and list[1].obj == lastCollectedCandy and list[2] then
+								target = list[2]
+							elseif list[1] then
+								target = list[1]
+							end
+							if target then break end
+						end
+					end
+
+					if target and target.obj.Parent then
+						if AutoFarmCandyEnabled then
+							collectItem(target.pos, 5)
+							lastCollectedCandy = target.obj
+						end
+					else
+						lastCollectedCandy = nil
+						task.wait(1)
+					end
+				end
+			end
+		end
+		task.wait(0.02)
+	end
+end)
+
+createToggle(scriptPage, "Auto Farm Candy", "Auto collects candy for you", function(state)
+	AutoFarmCandyEnabled = state
+	lastCollectedCandy = nil
+	if state then
+		showNotification("Auto Farm Candy Enabled")
+	else
+		showNotification("Auto Farm Candy Disabled")
+	end
 end)
 
 task.spawn(function()
-    while true do
-        task.wait(0.1)
-        
-        local character = LocalPlayer.Character
-        local root = character and character:FindFirstChild("HumanoidRootPart")
-        
-        if root then
-            if AutoCollectTicketsEnabled then
-                local ticketFolder = Workspace:FindFirstChild("ArcadeEventTickets")
-                if ticketFolder then
-                    local items = ticketFolder:GetDescendants()
-                    for i = 1, #items do
-                        if not AutoCollectTicketsEnabled then break end
-                        local item = items[i]
-                        if item:IsA("BasePart") then
-                            character = LocalPlayer.Character
-                            root = character and character:FindFirstChild("HumanoidRootPart")
-                            if not root then break end
-                            
-                            root.CFrame = item.CFrame
-                            if firetouchinterest then
-                                firetouchinterest(root, item, 0)
-                                task.wait()
-                                firetouchinterest(root, item, 1)
-                            end
-                            local prompt = item:FindFirstChildWhichIsA("ProximityPrompt") or item.Parent:FindFirstChildWhichIsA("ProximityPrompt")
-                            if prompt and fireproximityprompt then
-                                fireproximityprompt(prompt)
-                            end
-                            task.wait(0.3)
-                        end
-                    end
-                end
-            end
+	while true do
+		if AutoCollectValentineCoinEnabled then
+			local root = getCharacterRoots()
+			if root then
+				local valentinesCoinParts = Workspace:FindFirstChild("ValentinesCoinParts")
+				if valentinesCoinParts then
+					local coins = {}
+					for _, coin in ipairs(valentinesCoinParts:GetChildren()) do
+						if coin.Name == "ValentinesCoin" and coin.Parent then
+							local pos = getPosition(coin)
+							if pos then
+								table.insert(coins, {
+									obj  = coin,
+									pos  = pos,
+									dist = (root.Position - pos).Magnitude
+								})
+							end
+						end
+					end
 
-            if AutoCollectConsoleCoinsEnabled then
-                local ticketFolder = Workspace:FindFirstChild("ArcadeEventTickets")
-                local hasTickets = ticketFolder and #ticketFolder:GetChildren() > 0
-                
-                if not (AutoCollectTicketsEnabled and hasTickets) then
-                    local consoleFolder = Workspace:FindFirstChild("ArcadeEventConsoles")
-                    if consoleFolder then
-                        local items = consoleFolder:GetDescendants()
-                        for i = 1, #items do
-                            if not AutoCollectConsoleCoinsEnabled then break end
-                            if AutoCollectTicketsEnabled then
-                                ticketFolder = Workspace:FindFirstChild("ArcadeEventTickets")
-                                if ticketFolder and #ticketFolder:GetChildren() > 0 then break end
-                            end
-                            
-                            local item = items[i]
-                            if item:IsA("BasePart") then
-                                character = LocalPlayer.Character
-                                root = character and character:FindFirstChild("HumanoidRootPart")
-                                if not root then break end
-                                
-                                root.CFrame = item.CFrame
-                                if firetouchinterest then
-                                    firetouchinterest(root, item, 0)
-                                    task.wait()
-                                    firetouchinterest(root, item, 1)
-                                end
-                                local prompt = item:FindFirstChildWhichIsA("ProximityPrompt") or item.Parent:FindFirstChildWhichIsA("ProximityPrompt")
-                                if prompt and fireproximityprompt then
-                                    fireproximityprompt(prompt)
-                                end
-                                task.wait(0.3)
-                            end
-                        end
-                    end
-                end
-            end
-        end
-    end
+					if #coins > 0 then
+						table.sort(coins, function(a, b) return a.dist < b.dist end)
+						local target = nil
+						if lastCollectedValentineCoin and coins[1] and coins[1].obj == lastCollectedValentineCoin and coins[2] then
+							target = coins[2]
+						elseif coins[1] then
+							target = coins[1]
+						end
+						if target and target.obj.Parent then
+							if AutoCollectValentineCoinEnabled then
+								collectItem(target.pos, 3.3)
+								lastCollectedValentineCoin = target.obj
+							end
+						end
+					else
+						lastCollectedValentineCoin = nil
+						task.wait(1)
+					end
+				end
+			end
+		end
+		task.wait(0.02)
+	end
+end)
+
+createToggle(scriptPage, "Auto Farm Valentine Coins", "Auto Farms Valentine Coins for you", function(state)
+	AutoCollectValentineCoinEnabled = state
+	lastCollectedValentineCoin = nil
+	if state then
+		showNotification("Auto Farm Valentine Coins Enabled")
+	else
+		showNotification("Auto Farm Valentine Coins Disabled")
+	end
+end)
+
+local DEPOSIT_POS = Vector3.new(350, 3.3, -26)
+
+local function getDepositPrompt()
+	local ok, prompt = pcall(function()
+		return Workspace
+			:WaitForChild("ValentinesMap", 5)
+			:WaitForChild("CandyGramStation", 5)
+			:WaitForChild("Main", 5)
+			:WaitForChild("Prompts", 5)
+			:WaitForChild("ProximityPrompt", 5)
+	end)
+	return ok and prompt or nil
+end
+
+local function getEventCoinCount()
+	local ok, result = pcall(function()
+		local hud = PlayerGui:FindFirstChild("HUD")
+		if not hud then return nil end
+		local bottomLeft = hud:FindFirstChild("BottomLeft")
+		if not bottomLeft then return nil end
+		for _, child in ipairs(bottomLeft:GetChildren()) do
+			if child.Name == "EventCoins" then
+				for _, obj in ipairs(child:GetDescendants()) do
+					if obj:IsA("TextLabel") then
+						local current = obj.Text:match("(%d+)%s*/%s*%d+")
+						if current then return tonumber(current) end
+					end
+				end
+			end
+		end
+		return nil
+	end)
+	return ok and result or nil
+end
+
+task.spawn(function()
+	while true do
+		task.wait(0.3)
+		if AutoDepositCandyEnabled then
+			local val = getEventCoinCount()
+			if val and val >= 100 then
+				local prompt = getDepositPrompt()
+				if not prompt then task.wait(2) continue end
+
+				acquireMoveLock()
+				pcall(function()
+					local root = getCharacterRoots()
+					if root then
+						local cx, cz = root.Position.X, root.Position.Z
+						flyToPos(Vector3.new(cx, -25, cz), 1000)
+						task.wait(0.01)
+						flyToPos(Vector3.new(DEPOSIT_POS.X, -25, DEPOSIT_POS.Z), 1000)
+						task.wait(0.01)
+						flyToPos(DEPOSIT_POS, 1000)
+						task.wait(0.5)
+					end
+					for _ = 1, 3 do
+						local ok = pcall(fireproximityprompt, prompt)
+						if ok then break end
+						task.wait(0.3)
+					end
+				end)
+				releaseMoveLock()
+				task.wait(2)
+			end
+		end
+	end
+end)
+
+createToggle(scriptPage, "Auto Deposit Candy", "Auto deposits your candy for you", function(state)
+	AutoDepositCandyEnabled = state
+	if state then
+		showNotification("Auto Deposit Candy Enabled")
+	else
+		showNotification("Auto Deposit Candy Disabled")
+	end
 end)
 
 -- ===================================================
 --         🗺️ MAP PAGE CONTENT
 -- ===================================================
 
-local GodModeEnabled = false
-
-local function enableGodMode()
-	if GodModeEnabled then return end
-	GodModeEnabled = true
+local function flyThroughWaypoints(waypoints, speed)
 	local player = LocalPlayer
 	local character = player.Character or player.CharacterAdded:Wait()
-	local humanoid = character:FindFirstChildOfClass("Humanoid")
-	if humanoid then
-		humanoid:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
-		humanoid.MaxHealth = math.huge
-		humanoid.Health = math.huge
+	local root = character:WaitForChild("HumanoidRootPart")
+	
+	speed = speed or 1000
+	local noclip = true
+
+	local noclipConn = RunService.Stepped:Connect(function()
+		if noclip and character then
+			for _, part in ipairs(character:GetDescendants()) do
+				if part:IsA("BasePart") then 
+					part.CanCollide = false 
+				end
+			end
+		end
+	end)
+	
+	for i, targetPos in ipairs(waypoints) do
+		while (root.Position - targetPos).Magnitude > 2 do
+			local direction = (targetPos - root.Position).Unit
+			local dt = RunService.Heartbeat:Wait()
+			root.CFrame = root.CFrame + (direction * speed * dt)
+			root.Velocity = Vector3.new(0, 0, 0)
+		end
+		
+		if i < #waypoints then
+			task.wait(0.25)
+		end
+	end
+	
+	noclip = false
+	noclipConn:Disconnect()
+	for _, part in ipairs(character:GetDescendants()) do
+		if part:IsA("BasePart") and part.Name ~= "HumanoidRootPart" then 
+			part.CanCollide = true 
+		end
 	end
 end
 
-local function disableGodMode()
-	if not GodModeEnabled then return end
-	GodModeEnabled = false
-	local player = LocalPlayer
-	local character = player.Character
-	if character then
-		local humanoid = character:FindFirstChildOfClass("Humanoid")
-		if humanoid then
-			humanoid:SetStateEnabled(Enum.HumanoidStateType.Dead, true)
-			humanoid.MaxHealth = 100
-			humanoid.Health = 100
-		end
-	end
-end
-
-createButton(mapPage, "Go to Celestial Area", "Teleports you to the celestial area through the map", function()
+createButton(mapPage, "Go to celestial area", "Goes to the celestial area", function()
 	local player = LocalPlayer
 	local character = player.Character or player.CharacterAdded:Wait()
 	local root = character:WaitForChild("HumanoidRootPart")
 	
-	enableGodMode()
-	
-	local originalGravity = Workspace.Gravity
-	Workspace.Gravity = 0.00001
-	
-	local speed = 220
-	local noclip = true
-	
-	local noclipConn = RunService.Stepped:Connect(function()
-		if noclip and character then
-			for _, part in ipairs(character:GetDescendants()) do
-				if part:IsA("BasePart") then part.CanCollide = false end
-			end
-		end
-	end)
-	
-	showNotification("Teleporting to Celestial Area...")
+	showNotification("Going to celestial area...")
 	
 	task.spawn(function()
 		local waypoints = {
-			Vector3.new(root.Position.X, -2.7, 137.0),
-			Vector3.new(2607, -2.7, 137.0),
-			Vector3.new(2607, -2.8, 6.9)
+			Vector3.new(root.Position.X, -20, 0),
+			Vector3.new(2607.0, -20, 0),
+			Vector3.new(2607.0, -2.7, 0)
 		}
 		
-		for _, targetPos in ipairs(waypoints) do
-			while (root.Position - targetPos).Magnitude > 2.5 do
-				local direction = (targetPos - root.Position).Unit
-				local dt = RunService.Heartbeat:Wait()
-				root.CFrame = root.CFrame + (direction * speed * dt)
-				root.Velocity = Vector3.new(0, 0, 0)
-			end
-		end
-		
-		noclip = false
-		noclipConn:Disconnect()
-		for _, part in ipairs(character:GetDescendants()) do
-			if part:IsA("BasePart") and part.Name ~= "HumanoidRootPart" then part.CanCollide = true end
-		end
-		
-		Workspace.Gravity = originalGravity
-		disableGodMode()
-		showNotification("Arrived at Celestial Area!")
+		flyThroughWaypoints(waypoints, 1000)
+		showNotification("Arrived at celestial area!")
 	end)
 end)
 
-createButton(mapPage, "Go to Arcade Celestial Area", "Only works when arcade event is active!!", function()
+createButton(mapPage, "Go back to base", "Goes back to your base safely", function()
 	local player = LocalPlayer
 	local character = player.Character or player.CharacterAdded:Wait()
 	local root = character:WaitForChild("HumanoidRootPart")
 	
-	enableGodMode()
-	
-	local originalGravity = Workspace.Gravity
-	Workspace.Gravity = 0.00001
-	
-	local speed = 220
-	local noclip = true
-	
-	local noclipConn = RunService.Stepped:Connect(function()
-		if noclip and character then
-			for _, part in ipairs(character:GetDescendants()) do
-				if part:IsA("BasePart") then part.CanCollide = false end
-			end
-		end
-	end)
-	
-	showNotification("Teleporting to Arcade Celestial Area...")
+	showNotification("Going back to base...")
 	
 	task.spawn(function()
 		local waypoints = {
-			Vector3.new(root.Position.X, -2.7, 137.0),
-			Vector3.new(4025, -2.7, 137.0),
-			Vector3.new(4025, -2.7, -9.8)
+			Vector3.new(root.Position.X, -20, 0),
+			Vector3.new(125, -20, 0),
+			Vector3.new(125, 3.3, 0)
 		}
 		
-		for _, targetPos in ipairs(waypoints) do
-			while (root.Position - targetPos).Magnitude > 2.5 do
-				local direction = (targetPos - root.Position).Unit
-				local dt = RunService.Heartbeat:Wait()
-				root.CFrame = root.CFrame + (direction * speed * dt)
-				root.Velocity = Vector3.new(0, 0, 0)
-			end
-		end
-		
-		noclip = false
-		noclipConn:Disconnect()
-		for _, part in ipairs(character:GetDescendants()) do
-			if part:IsA("BasePart") and part.Name ~= "HumanoidRootPart" then part.CanCollide = true end
-		end
-		
-		Workspace.Gravity = originalGravity
-		disableGodMode()
-		showNotification("Arrived at Arcade Celestial Area!")
+		flyThroughWaypoints(waypoints, 1000)
+		showNotification("Arrived at base!")
 	end)
 end)
 
-createButton(mapPage, "Go to Base", "Returns you to the base safely", function()
+createButton(mapPage, "Go to secret Valentines Room", "Goes to the Valentines special Room", function()
 	local player = LocalPlayer
 	local character = player.Character or player.CharacterAdded:Wait()
 	local root = character:WaitForChild("HumanoidRootPart")
 	
-	enableGodMode()
-	
-	local originalGravity = Workspace.Gravity
-	Workspace.Gravity = 0.00001
-	
-	local speed = 220
-	local noclip = true
-	
-	local noclipConn = RunService.Stepped:Connect(function()
-		if noclip and character then
-			for _, part in ipairs(character:GetDescendants()) do
-				if part:IsA("BasePart") then part.CanCollide = false end
-			end
-		end
-	end)
-	
-	showNotification("Teleporting to Base...")
+	showNotification("Going to Valentine area...")
 	
 	task.spawn(function()
 		local waypoints = {
-			Vector3.new(root.Position.X, -2.7, 137.0),
-			Vector3.new(148.0, 3.3, 137.0)
+			Vector3.new(root.Position.X, -20, -165),
+			Vector3.new(757.9, -20, -165),
+			Vector3.new(757.9, -7, -165)
 		}
 		
-		for _, targetPos in ipairs(waypoints) do
-			while (root.Position - targetPos).Magnitude > 2.5 do
-				local direction = (targetPos - root.Position).Unit
-				local dt = RunService.Heartbeat:Wait()
-				root.CFrame = root.CFrame + (direction * speed * dt)
-				root.Velocity = Vector3.new(0, 0, 0)
-			end
-		end
-		
-		noclip = false
-		noclipConn:Disconnect()
-		for _, part in ipairs(character:GetDescendants()) do
-			if part:IsA("BasePart") and part.Name ~= "HumanoidRootPart" then part.CanCollide = true end
-		end
-		
-		Workspace.Gravity = originalGravity
-		disableGodMode()
-		showNotification("Complete (If you din't die in the process)")
+		flyThroughWaypoints(waypoints, 1000)
+		showNotification("Arrived at the Valentines Room!")
 	end)
 end)
-
-createButton(mapPage, "Go to Arcade", "Teleports you to the arcade area through the map", function()
-	local player = LocalPlayer
-	local character = player.Character or player.CharacterAdded:Wait()
-	local root = character:WaitForChild("HumanoidRootPart")
-	
-	enableGodMode()
-	
-	local originalGravity = Workspace.Gravity
-	Workspace.Gravity = 0.00001
-	
-	local speed = 220
-	local noclip = true
-	
-	local noclipConn = RunService.Stepped:Connect(function()
-		if noclip and character then
-			for _, part in ipairs(character:GetDescendants()) do
-				if part:IsA("BasePart") then part.CanCollide = false end
-			end
-		end
-	end)
-	
-	showNotification("Teleporting to Arcade...")
-	
-	task.spawn(function()
-		local waypoints = {
-			Vector3.new(root.Position.X, 3.3, -137.0),
-			Vector3.new(152.5, 3.3, -135),
-			Vector3.new(755, -2.7, -137)
-		}
-		
-		for _, targetPos in ipairs(waypoints) do
-			while (root.Position - targetPos).Magnitude > 2.5 do
-				local direction = (targetPos - root.Position).Unit
-				local dt = RunService.Heartbeat:Wait()
-				root.CFrame = root.CFrame + (direction * speed * dt)
-				root.Velocity = Vector3.new(0, 0, 0)
-			end
-		end
-		
-		noclip = false
-		noclipConn:Disconnect()
-		for _, part in ipairs(character:GetDescendants()) do
-			if part:IsA("BasePart") and part.Name ~= "HumanoidRootPart" then part.CanCollide = true end
-		end
-		
-		Workspace.Gravity = originalGravity
-		disableGodMode()
-      Workspace.Gravity = originalGravity
-		showNotification("Arrived at Arcade!")
-	end)
-end)
-
 
 -- ===================================================
 --       ⚙️ SETTINGS PAGE CONTENT
@@ -1308,35 +1316,6 @@ createToggle(settingsPage, "Noclip", "Walk through walls", function(enabled)
 			end
 		end
 	end
-end)
-
-createButton(settingsPage, "Money Event Script", "Goes back to an older version, makes sure It works for both events", function()
-	showNotification("Loading Money Event Script...")
-	
-	farming = false
-	autoSpinEnabled = false
-	spinning = false
-	removingBases = false
-	NoclipEnabled = false
-    AutoCollectTicketsEnabled = false
-    AutoCollectConsoleCoinsEnabled = false
-	
-	Workspace.Gravity = 196.2
-	disableGodMode()
-	
-	local player = LocalPlayer
-	local character = player.Character
-	if character then
-		for _, part in pairs(character:GetDescendants()) do
-			if part:IsA("BasePart") and part.Name ~= "HumanoidRootPart" then
-				part.CanCollide = true
-			end
-		end
-	end
-	
-	if gui then gui:Destroy() end
-	task.wait(0.5)
-	loadstring(game:HttpGet("https://raw.githubusercontent.com/klimplimRBX/GGHub/main/GGHubMoneyEvent.lua"))()
 end)
 
 -- ===================================================

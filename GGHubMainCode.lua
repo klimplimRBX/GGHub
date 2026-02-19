@@ -1405,7 +1405,7 @@ createToggle(scriptPage, "Auto Farm Valentine Coins", "Auto Farms Valentine Coin
 	end
 end)
 
-local DEPOSIT_POS = Vector3.new(270, 3.3, -26)
+local DEPOSIT_POS = Vector3.new(355, 3.3, -26)
 
 local function getDepositPrompt()
 	local ok, prompt = pcall(function()

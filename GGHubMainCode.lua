@@ -1233,8 +1233,8 @@ createButton(mapPage, "Go to celestial area", "Goes to the celestial area", func
 	task.spawn(function()
 		local waypoints = {
 			Vector3.new(root.Position.X, -20, 0),
-			Vector3.new(2607.0, -20, 0),
-			Vector3.new(2607.0, -2.7, 0)
+			Vector3.new(4026.0, -20, 0),
+			Vector3.new(4026.0, -2.7, 0)
 		}
 		
 		flyThroughWaypoints(waypoints, 1000)

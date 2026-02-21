@@ -789,7 +789,6 @@ local function createButton(parent, titleText, desc, callback)
 	end)
 end
 
-
 local function createDropdown(parent, titleText, options, callback)
 	local isOpened = false
 	local baseHeight = 60
@@ -1171,7 +1170,7 @@ createDropdown(homePage, "Select Shader", {"Default", "Daytime", "Sunset", "Nigh
 end)
 
 -- ===================================================
---       ⚡ SCRIPTS PAGE CONTENT - VALENTINE EVENT
+--       ⚡ SCRIPTS PAGE CONTENT - DOOM EVENT
 -- ===================================================
 
 local AutoFarmDoomCoinEnabled = false
@@ -1240,7 +1239,7 @@ local function flyToPos(targetPos, speed)
 	if not isCharacterAlive(root, humanoid) then return false end
 
 	while (root.Position - targetPos).Magnitude > 1.5 do
-    if not AutoPressDoomButtonEnabled then return false end
+    if not AutoPressDoomButtonEnabled and not AutoFarmDoomCoinEnabled then return false end
     local dt = RunService.Heartbeat:Wait()
     if not isCharacterAlive(root, humanoid) then return false end
     local remaining = (targetPos - root.Position)

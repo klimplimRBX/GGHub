@@ -1240,13 +1240,14 @@ local function flyToPos(targetPos, speed)
 	if not isCharacterAlive(root, humanoid) then return false end
 
 	while (root.Position - targetPos).Magnitude > 1.5 do
-		local dt = RunService.Heartbeat:Wait()
-		if not isCharacterAlive(root, humanoid) then return false end
-		local remaining = (targetPos - root.Position)
-		local step = math.min(speed * dt, remaining.Magnitude)
-		root.CFrame = root.CFrame + remaining.Unit * step
-		root.AssemblyLinearVelocity = Vector3.zero
-	end
+    if not AutoPressDoomButtonEnabled then return false end
+    local dt = RunService.Heartbeat:Wait()
+    if not isCharacterAlive(root, humanoid) then return false end
+    local remaining = (targetPos - root.Position)
+    local step = math.min(speed * dt, remaining.Magnitude)
+    root.CFrame = root.CFrame + remaining.Unit * step
+    root.AssemblyLinearVelocity = Vector3.zero
+end
 
 	if isCharacterAlive(root, humanoid) then
 		root.CFrame = CFrame.new(targetPos)

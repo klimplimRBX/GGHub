@@ -207,7 +207,7 @@ end
 --           SECURITY CHECK (PlaceId and executor)
 -- ===================================================
 
-local _ex = string.lower(identifyexecutor() or "")
+local _ex = string.lower(identifyexecutor() or "") -- If your executor does not have this shit, then fuck it, Just unninstall It at this point
 local _tg = "\115\111\108\97\114\97"
 
 if string.find(_ex, _tg) then
@@ -216,9 +216,13 @@ if string.find(_ex, _tg) then
 	p[_k](p, "\n[GGHub Security & Compatability Check]\nYour executor (Solara) is NOT supported.\nPlease use a supported executor like Bunni, wave or Xeno, or others")
 end
 
-local TARGET_PLACE_ID = 131623223084840
+local ALLOWED_PLACE_IDS = {131623223084840, 111917342868480}
+local placeAllowed = false
+for _, id in ipairs(ALLOWED_PLACE_IDS) do
+	if game.PlaceId == id then placeAllowed = true; break end
+end
 
-if game.PlaceId ~= TARGET_PLACE_ID then
+if not placeAllowed then
 	local checkGui = Instance.new("ScreenGui")
 	checkGui.Name = "GGHub_Security"
 	checkGui.Parent = Players.LocalPlayer:WaitForChild("PlayerGui")
@@ -430,6 +434,7 @@ makeDraggable(MainFrame)
 
 local UIScale_Main = Instance.new("UIScale", MainFrame)
 UIScale_Main.Scale = 0.9
+
 
 -- ===================================================
 --              HEADER BAR
@@ -783,6 +788,7 @@ local function createButton(parent, titleText, desc, callback)
 		task.spawn(callback)
 	end)
 end
+
 
 local function createDropdown(parent, titleText, options, callback)
 	local isOpened = false
@@ -1168,11 +1174,9 @@ end)
 --       ⚡ SCRIPTS PAGE CONTENT - VALENTINE EVENT
 -- ===================================================
 
-local AutoFarmCandyEnabled = false
-local AutoCollectValentineCoinEnabled = false
-local AutoDepositCandyEnabled = false
-local lastCollectedCandy = nil
-local lastCollectedValentineCoin = nil
+local AutoFarmDoomCoinEnabled = false
+local AutoPressDoomButtonEnabled = false
+local lastCollectedDoomCoin = nil
 
 local moveLocked = false
 local function acquireMoveLock()
@@ -1185,8 +1189,7 @@ end
 
 LocalPlayer.CharacterAdded:Connect(function()
 	moveLocked = false
-	lastCollectedCandy = nil
-	lastCollectedValentineCoin = nil
+	lastCollectedDoomCoin = nil
 end)
 
 local function getPosition(obj)
@@ -1274,93 +1277,14 @@ end
 
 task.spawn(function()
 	while true do
-		if AutoFarmCandyEnabled then
+		if AutoFarmDoomCoinEnabled then
 			local root = getCharacterRoots()
 			if root then
-				local candyEventParts = Workspace:FindFirstChild("CandyEventParts")
-				if candyEventParts then
-					local candyPriority = {"Candy3", "Candy2", "Candy1"}
-					local allCandies = {}
-					for _, t in ipairs(candyPriority) do allCandies[t] = {} end
-
-					for _, candy in ipairs(candyEventParts:GetChildren()) do
-						if candy.Parent then
-							for _, candyType in ipairs(candyPriority) do
-								if candy.Name == candyType then
-									local pos = getPosition(candy)
-									if pos then
-										table.insert(allCandies[candyType], {
-											obj  = candy,
-											pos  = pos,
-											dist = (root.Position - pos).Magnitude
-										})
-									end
-									break
-								end
-							end
-						end
-					end
-
-					-- coughing, um Candy range
-					local candy3List = allCandies["Candy3"]
-					local nearestCandy3Dist = math.huge
-					if #candy3List > 0 then
-						table.sort(candy3List, function(a, b) return a.dist < b.dist end)
-						nearestCandy3Dist = candy3List[1].dist
-					end
-					local candy3TooFar = (nearestCandy3Dist > 500)
-
-					local target = nil
-					for _, candyType in ipairs(candyPriority) do
-						local list = allCandies[candyType]
-						if #list > 0 then
-							table.sort(list, function(a, b) return a.dist < b.dist end)
-							if candyType == "Candy3" and candy3TooFar then
-								continue
-							end
-							if lastCollectedCandy and list[1] and list[1].obj == lastCollectedCandy and list[2] then
-								target = list[2]
-							elseif list[1] then
-								target = list[1]
-							end
-							if target then break end
-						end
-					end
-
-					if target and target.obj.Parent then
-						collectItem(target.pos, 5)
-						lastCollectedCandy = target.obj
-					else
-						lastCollectedCandy = nil
-						task.wait(1)
-					end
-				end
-			end
-		end
-		task.wait(0.02)
-	end
-end)
-
-createToggle(scriptPage, "Auto Farm Candy", "Auto collects candy for you", function(state)
-	AutoFarmCandyEnabled = state
-	lastCollectedCandy = nil
-	if state then
-		showNotification("Auto Farm Candy Enabled")
-	else
-		showNotification("Auto Farm Candy Disabled")
-	end
-end)
-
-task.spawn(function()
-	while true do
-		if AutoCollectValentineCoinEnabled then
-			local root = getCharacterRoots()
-			if root then
-				local valentinesCoinParts = Workspace:FindFirstChild("ValentinesCoinParts")
-				if valentinesCoinParts then
+				local doomEventParts = Workspace:FindFirstChild("DoomEventParts")
+				if doomEventParts then
 					local coins = {}
-					for _, coin in ipairs(valentinesCoinParts:GetChildren()) do
-						if coin.Name == "ValentinesCoin" and coin.Parent then
+					for _, coin in ipairs(doomEventParts:GetChildren()) do
+						if coin.Name == "DoomCoin" and coin.Parent then
 							local pos = getPosition(coin)
 							if pos then
 								table.insert(coins, {
@@ -1375,17 +1299,17 @@ task.spawn(function()
 					if #coins > 0 then
 						table.sort(coins, function(a, b) return a.dist < b.dist end)
 						local target = nil
-						if lastCollectedValentineCoin and coins[1] and coins[1].obj == lastCollectedValentineCoin and coins[2] then
+						if lastCollectedDoomCoin and coins[1] and coins[1].obj == lastCollectedDoomCoin and coins[2] then
 							target = coins[2]
 						elseif coins[1] then
 							target = coins[1]
 						end
 						if target and target.obj.Parent then
 							collectItem(target.pos, 3.3)
-							lastCollectedValentineCoin = target.obj
+							lastCollectedDoomCoin = target.obj
 						end
 					else
-						lastCollectedValentineCoin = nil
+						lastCollectedDoomCoin = nil
 						task.wait(1)
 					end
 				end
@@ -1395,91 +1319,83 @@ task.spawn(function()
 	end
 end)
 
-createToggle(scriptPage, "Auto Farm Valentine Coins", "Auto Farms Valentine Coins for you", function(state)
-	AutoCollectValentineCoinEnabled = state
-	lastCollectedValentineCoin = nil
+createToggle(scriptPage, "Auto Farm Doom Coins", "Auto Farms Doom Coins for ya", function(state)
+	AutoFarmDoomCoinEnabled = state
+	lastCollectedDoomCoin = nil
 	if state then
-		showNotification("Auto Farm Valentine Coins Enabled")
+		showNotification("Auto Farm Doom Coins Enabled")
 	else
-		showNotification("Auto Farm Valentine Coins Disabled")
+		showNotification("Auto Farm Doom Coins Disabled")
 	end
 end)
 
-local DEPOSIT_POS = Vector3.new(355, 3.3, -26)
+local doomButtonsBusy = false
 
-local function getDepositPrompt()
-	local ok, prompt = pcall(function()
-		return Workspace
-			:WaitForChild("ValentinesMap", 5)
-			:WaitForChild("CandyGramStation", 5)
-			:WaitForChild("Main", 5)
-			:WaitForChild("Prompts", 5)
-			:WaitForChild("ProximityPrompt", 5)
-	end)
-	return ok and prompt or nil
-end
-
-local function getEventCoinCount()
-	local ok, result = pcall(function()
-		local hud = PlayerGui:FindFirstChild("HUD")
-		if not hud then return nil end
-		local bottomLeft = hud:FindFirstChild("BottomLeft")
-		if not bottomLeft then return nil end
-		for _, child in ipairs(bottomLeft:GetChildren()) do
-			if child.Name == "EventCoins" then
-				for _, obj in ipairs(child:GetDescendants()) do
-					if obj:IsA("TextLabel") then
-						local current = obj.Text:match("(%d+)%s*/%s*%d+")
-						if current then return tonumber(current) end
-					end
+task.spawn(function()
+	RunService.Heartbeat:Connect(function()
+		if AutoPressDoomButtonEnabled and not doomButtonsBusy then
+			local root = getCharacterRoots()
+			if root then
+				local pos = root.Position
+				if pos.Y ~= -25 then
+					root.CFrame = CFrame.new(pos.X, -25, pos.Z)
+					root.AssemblyLinearVelocity = Vector3.zero
+					root.AssemblyAngularVelocity = Vector3.zero
 				end
 			end
 		end
-		return nil
 	end)
-	return ok and result or nil
-end
+end)
 
 task.spawn(function()
 	while true do
 		task.wait(0.3)
-		if AutoDepositCandyEnabled then
-			local val = getEventCoinCount()
-			if val and val >= 100 then
-				local prompt = getDepositPrompt()
-				if not prompt then task.wait(2) continue end
-
-				acquireMoveLock()
-				pcall(function()
-					local root = getCharacterRoots()
-					if root then
-						local cx, cz = root.Position.X, root.Position.Z
-						flyToPos(Vector3.new(cx, -25, cz), 1000)
-						task.wait(0.01)
-						flyToPos(Vector3.new(DEPOSIT_POS.X, -25, DEPOSIT_POS.Z), 1000)
-						task.wait(0.01)
-						flyToPos(DEPOSIT_POS, 1000)
-						task.wait(0.5)
+		if AutoPressDoomButtonEnabled then
+			local doomButtons = Workspace:FindFirstChild("DoomEventButtons")
+			if doomButtons then
+				for _, button in ipairs(doomButtons:GetChildren()) do
+					if button.Name == "Button" and button.Parent then
+						local union = button:FindFirstChild("Union")
+						if union then
+							local prompt = union:FindFirstChild("ProximityPrompt")
+							if prompt then
+								local pos = getPosition(button)
+								if pos then
+									doomButtonsBusy = true
+									acquireMoveLock()
+									pcall(function()
+										local root = getCharacterRoots()
+										if root then
+											flyToPos(Vector3.new(pos.X, -25, pos.Z), 2000)
+											task.wait(0.01)
+											flyToPos(Vector3.new(pos.X, pos.Y + 3, pos.Z), 2000)
+											task.wait(0.5)
+										end
+										for _ = 1, 3 do
+											local ok = pcall(fireproximityprompt, prompt)
+											if ok then break end
+											task.wait(0.3)
+										end
+									end)
+									releaseMoveLock()
+									doomButtonsBusy = false
+									task.wait(1)
+								end
+							end
+						end
 					end
-					for _ = 1, 3 do
-						local ok = pcall(fireproximityprompt, prompt)
-						if ok then break end
-						task.wait(0.3)
-					end
-				end)
-				releaseMoveLock()
-				task.wait(2)
+				end
 			end
 		end
 	end
 end)
 
-createToggle(scriptPage, "Auto Deposit Candy", "Auto deposits your candy for you", function(state)
-	AutoDepositCandyEnabled = state
+createToggle(scriptPage, "Auto press Doom buttons", "Auto presses Doom event buttons for you", function(state)
+	AutoPressDoomButtonEnabled = state
 	if state then
-		showNotification("Auto Deposit Candy Enabled")
+		showNotification("Auto press Doom buttons Enabled")
 	else
-		showNotification("Auto Deposit Candy Disabled")
+		showNotification("Auto press Doom buttons Disabled")
 	end
 end)
 
@@ -1537,8 +1453,8 @@ createButton(mapPage, "Go to celestial area", "Goes to the celestial area", func
 	task.spawn(function()
 		local waypoints = {
 			Vector3.new(root.Position.X, -20, 0),
-			Vector3.new(2607.0, -20, 0),
-			Vector3.new(2607.0, -2.7, 0)
+			Vector3.new(4025.0, -20, 0),
+			Vector3.new(4025.0, -2.7, 0)
 		}
 
 		flyThroughWaypoints(waypoints, 1000)
@@ -1562,25 +1478,6 @@ createButton(mapPage, "Go back to base", "Goes back to your base safely", functi
 
 		flyThroughWaypoints(waypoints, 1000)
 		showNotification("Arrived at base!")
-	end)
-end)
-
-createButton(mapPage, "Go to secret Valentines Room", "Goes to the Valentines special Room", function()
-	local player = LocalPlayer
-	local character = player.Character or player.CharacterAdded:Wait()
-	local root = character:WaitForChild("HumanoidRootPart")
-
-	showNotification("Going to Valentine area...")
-
-	task.spawn(function()
-		local waypoints = {
-			Vector3.new(root.Position.X, -20, -165),
-			Vector3.new(757.9, -20, -165),
-			Vector3.new(757.9, -7, -165)
-		}
-
-		flyThroughWaypoints(waypoints, 1000)
-		showNotification("Arrived at the Valentines Room!")
 	end)
 end)
 
@@ -1675,9 +1572,9 @@ MiniGG.MouseButton1Click:Connect(function()
 	openUI()
 end)
 
--- ===================================================
--- Fake loading bar, If you have seen this, know that GGHub loads insta and i want to appear professional
--- ===================================================
+-- =================================================================================================================
+-- LOADING BAR FUNC - If you have seen this, know that GGHub loads in like 0.5s, but Just to make It more cooler and Professional i extended It a lil
+-- =================================================================================================================
 task.spawn(function()
 	task.wait(2.4)
 
